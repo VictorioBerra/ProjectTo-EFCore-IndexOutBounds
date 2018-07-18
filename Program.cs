@@ -70,14 +70,28 @@ namespace EFCore
                     context.Database.Migrate();
 
                     var results = context.Cat
-                        .OrderBy(x => x.MeowLoudness)
-                        // Commenting this line out fixes the error
-                        // or changing this to anything other than MeowLoudness
-                        .ThenBy(x => x.MeowLoudness)
-                        // Inside of CatViewModel is a related entity "Breed"
-                        // Commenting this out fixes the error
-                        .ProjectTo<CatViewModel>()
-                        .ToList();
+                       .OrderBy(x => x.MeowLoudness)
+                       .ThenBy(x => x.MeowLoudness)
+
+                       .Select(x => new CatViewModel()
+                       {
+                           Id = x.Id,
+                           Name = x.Name,
+                           Breed = new CatBreedViewModel() {
+                               Id = x.Breed.Id,
+                               BreedName = x.Breed.BreedName,
+                               Cats = x.Breed.Cats.Select(y => new CatViewModel()
+                               {
+                                   Id = y.Id,
+                                   MeowLoudness = y.MeowLoudness,
+                                   Name = y.Name,
+                                   TailLength = y.TailLength
+                               }).ToList()
+                           },
+                           MeowLoudness = x.MeowLoudness,
+                           TailLength = x.TailLength
+                       })
+                       .ToList();
 
                     Console.WriteLine(results.Count);
 
